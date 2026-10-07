@@ -1,0 +1,643 @@
+<html lang="km">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ផ្ទាំងគណនាហាងឆេងមាស និងតម្លៃប្រេង (Live Market Calculator)</title>
+  <!-- Google Fonts: Kantumruy Pro & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- html2pdf.js CDN for client-side PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: rgba(22, 27, 34, 0.85);
+      --card-border: #30363d;
+      --gold-accent: #f59e0b;
+      --gold-hover: #d97706;
+      --oil-accent: #06b6d4;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-green: #10b981;
+      --table-stripe: rgba(255, 255, 255, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 24px 16px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(245, 158, 11, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.07) 0%, transparent 40%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1050px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px 28px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-title h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse-anim 1.8s infinite;
+    }
+
+    @keyframes pulse-anim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* Download PDF Button */
+    .btn-pdf {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-family: 'Kantumruy Pro', 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .btn-pdf:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
+    }
+
+    .btn-pdf:active {
+      transform: translateY(0);
+    }
+
+    /* Controls Bar */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .control-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(8px);
+    }
+
+    .control-card.gold-border {
+      border-top: 3px solid var(--gold-accent);
+    }
+    .control-card.oil-border {
+      border-top: 3px solid var(--oil-accent);
+    }
+    .control-card.fx-border {
+      border-top: 3px solid #a855f7;
+    }
+
+    .control-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper span.unit-symbol {
+      position: absolute;
+      left: 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .input-field {
+      width: 100%;
+      background: #090d13;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 600;
+      font-family: 'Inter', 'Kantumruy Pro', sans-serif;
+      padding: 10px 14px 10px 34px;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--gold-accent);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .oil-border .input-field:focus {
+      border-color: var(--oil-accent);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+    }
+
+    .fx-border .input-field:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+    }
+
+    /* Printable Area Wrapper */
+    #reportContent {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .section-title {
+      font-size: 1.12rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title.gold-title {
+      color: #fbbf24;
+    }
+
+    .section-title.oil-title {
+      color: #38bdf8;
+    }
+
+    .formula-badge {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: #090d13;
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(13, 17, 23, 0.9);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 14px 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 16px 20px;
+      font-size: 0.95rem;
+      border-bottom: 1px solid rgba(48, 54, 61, 0.6);
+      transition: background 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .unit-cell {
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag-primary {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--gold-accent);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .tag-oil {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--oil-accent);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .price-usd {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      font-size: 1.05rem;
+    }
+
+    .price-khr {
+      font-family: 'Inter', 'Kantumruy Pro', sans-serif;
+      color: #34d399;
+      font-weight: 600;
+      font-size: 0.96rem;
+    }
+
+    .footer-note {
+      padding: 14px 24px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(13, 17, 23, 0.4);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 14px 8px;
+      }
+      .header-title h1 {
+        font-size: 1.25rem;
+      }
+      th, td {
+        padding: 12px 14px;
+        font-size: 0.88rem;
+      }
+      .price-usd {
+        font-size: 0.95rem;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Header -->
+    <header class="header">
+      <div class="header-title">
+        <h1>📊 កម្មវិធីគណនាហាងឆេងមាស និងប្រេងជាក់ស្តែង</h1>
+        <p>បញ្ចូលតម្លៃទីផ្សារបច្ចុប្បន្ន ដើម្បីគណនាបំប្លែងទម្ងន់ និងតម្លៃដោយស្វ័យប្រវត្តិ</p>
+      </div>
+      <div class="header-actions">
+        <button id="btnDownloadPDF" class="btn-pdf">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          ទាញយក PDF
+        </button>
+        <div class="badge-live">
+          <span class="pulse"></span> Live Calculator
+        </div>
+      </div>
+    </header>
+
+    <!-- Dynamic Inputs Section -->
+    <div class="controls-grid">
+      <!-- Gold Spot Input -->
+      <div class="control-card gold-border">
+        <label class="control-label" for="goldInput">
+          <span>ហាងឆេងមាស Spot (XAUUSD)</span>
+          <span style="color: var(--gold-accent);">1 oz t</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="unit-symbol">$</span>
+          <input type="number" id="goldInput" class="input-field" value="4142.61" step="0.01" />
+        </div>
+      </div>
+
+      <!-- Oil Crude Input -->
+      <div class="control-card oil-border">
+        <label class="control-label" for="oilInput">
+          <span>តម្លៃប្រេងឆៅ WTI Crude</span>
+          <span style="color: var(--oil-accent);">1 Barrel</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="unit-symbol">$</span>
+          <input type="number" id="oilInput" class="input-field" value="90.16" step="0.01" />
+        </div>
+      </div>
+
+      <!-- Exchange Rate Input -->
+      <div class="control-card fx-border">
+        <label class="control-label" for="khrRateInput">
+          <span>អត្រាប្តូរប្រាក់ (USD / KHR)</span>
+          <span style="color: #c084fc;">1 USD</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="unit-symbol">៛</span>
+          <input type="number" id="khrRateInput" class="input-field" value="4050" step="10" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Printable Report Container -->
+    <div id="reportContent">
+      <!-- 1. Gold Market Section -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-title gold-title">
+            <span>🟡</span> តារាងហាងឆេង និងការបំប្លែងខ្នាតមាសខ្មែរ
+          </div>
+          <div class="formula-badge">
+            1 oz = 31.1035g | 1 ជី = 3.75g | 1 តម្លឹង = 10 ជី (37.5g)
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ខ្នាតមាស (Unit)</th>
+                <th>ទម្ងន់ជាក្រាម (g)</th>
+                <th>សមមូលជា Ounce</th>
+                <th>តម្លៃគិតជា USD ($)</th>
+                <th>តម្លៃគិតជាប្រាក់រៀល (KHR)</th>
+              </tr>
+            </thead>
+            <tbody id="goldTableBody">
+              <!-- Dynamically Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer-note">
+          <span>* រូបមន្តគណនា៖ តម្លៃ = (ទម្ងន់ក្រាម ÷ 31.1034768) × តម្លៃ XAUUSD</span>
+          <span>តម្លៃជាក់ស្តែងតាមហាងអាចខុសគ្នាតាមប្រភេទទឹកមាស និងថ្លៃឈ្នួល</span>
+        </div>
+      </section>
+
+      <!-- 2. Oil Market Section -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-title oil-title">
+            <span>🛢️</span> តារាងតម្លៃប្រេងឆៅ និងប្រេងឥន្ធនៈលក់រាយ
+          </div>
+          <div class="formula-badge">
+            1 Barrel (bbl) ≈ 158.9873 Litres
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ប្រភេទប្រេង (Commodity)</th>
+                <th>ខ្នាត (Unit)</th>
+                <th>បរិមាណ (Litre)</th>
+                <th>តម្លៃជាក់ស្តែង (USD)</th>
+                <th>តម្លៃគិតជាប្រាក់រៀល (KHR)</th>
+              </tr>
+            </thead>
+            <tbody id="oilTableBody">
+              <!-- Dynamically Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer-note">
+          <span>* ប្រេងឥន្ធនៈលក់រាយ (សាំង/ម៉ាស៊ូត) គិតតាមតម្លៃប៉ាន់ស្មានទីផ្សារក្នុងស្រុកជាក់ស្តែង</span>
+          <span>ធ្វើបច្ចុប្បន្នភាពស្វ័យប្រវត្តិតាមការកែប្រែប្រអប់បញ្ចូលខាងលើ</span>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <script>
+    // Constants for precise weight conversion
+    const OZ_TO_GRAM = 31.1034768; // 1 Troy Ounce in grams
+    const BARREL_TO_LITRE = 158.987295; // 1 US Oil Barrel in litres
+
+    // DOM Elements
+    const goldInput = document.getElementById('goldInput');
+    const oilInput = document.getElementById('oilInput');
+    const khrRateInput = document.getElementById('khrRateInput');
+    const goldTableBody = document.getElementById('goldTableBody');
+    const oilTableBody = document.getElementById('oilTableBody');
+    const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+
+    // Number formatters
+    const formatUSD = (val) => '$' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatKHR = (val) => Number(Math.round(val)).toLocaleString('en-US') + ' ៛';
+
+    // Gold units definition
+    const goldUnits = [
+      { name: '១ Ounce (oz t)', grams: OZ_TO_GRAM, badge: 'Standard' },
+      { name: '១ ជី (Chi)', grams: 3.75, badge: 'ខ្មែរ' },
+      { name: '១ តម្លឹង (Damlung)', grams: 37.5, badge: 'ខ្មែរ' },
+      { name: '១ គីឡូក្រាម (Kg)', grams: 1000.0, badge: 'Metric' }
+    ];
+
+    function calculateMarket() {
+      const goldPrice = parseFloat(goldInput.value) || 0;
+      const oilPrice = parseFloat(oilInput.value) || 0;
+      const khrRate = parseFloat(khrRateInput.value) || 4050;
+
+      // 1. Render Gold Table
+      let goldHtml = '';
+      goldUnits.forEach(unit => {
+        const ozEquivalent = unit.grams / OZ_TO_GRAM;
+        const priceUSD = ozEquivalent * goldPrice;
+        const priceKHR = priceUSD * khrRate;
+
+        goldHtml += `
+          <tr>
+            <td class="unit-cell">
+              <span>${unit.name}</span>
+              <span class="tag-primary">${unit.badge}</span>
+            </td>
+            <td>${unit.grams.toFixed(2)} g</td>
+            <td>${ozEquivalent.toFixed(4)} oz t</td>
+            <td class="price-usd">${formatUSD(priceUSD)}</td>
+            <td class="price-khr">${formatKHR(priceKHR)}</td>
+          </tr>
+        `;
+      });
+      goldTableBody.innerHTML = goldHtml;
+
+      // 2. Render Oil Table
+      const crudePerLitreUSD = oilPrice / BARREL_TO_LITRE;
+      const crudePerLitreKHR = crudePerLitreUSD * khrRate;
+      const crudeBarrelKHR = oilPrice * khrRate;
+
+      const retailData = [
+        { name: 'WTI Crude Oil', unit: '1 Barrel', litres: '~ 159 L', usd: oilPrice, khr: crudeBarrelKHR, badge: 'Market' },
+        { name: 'WTI Crude (គិតជាលីត្រ)', unit: '1 Litre', litres: '1 L', usd: crudePerLitreUSD, khr: crudePerLitreKHR, badge: 'Raw Unit' },
+        { name: 'សាំងធម្មតា (Regular EA92)', unit: '1 Litre', litres: '1 L', usd: 1.02, khr: 1.02 * khrRate, badge: 'Retail' },
+        { name: 'សាំងស៊ុបពែរ (Super EA95)', unit: '1 Litre', litres: '1 L', usd: 1.15, khr: 1.15 * khrRate, badge: 'Retail' },
+        { name: 'ប្រេងម៉ាស៊ូត (Diesel DO)', unit: '1 Litre', litres: '1 L', usd: 0.98, khr: 0.98 * khrRate, badge: 'Retail' }
+      ];
+
+      let oilHtml = '';
+      retailData.forEach(item => {
+        oilHtml += `
+          <tr>
+            <td class="unit-cell">
+              <span>${item.name}</span>
+              <span class="tag-oil">${item.badge}</span>
+            </td>
+            <td>${item.unit}</td>
+            <td>${item.litres}</td>
+            <td class="price-usd">${formatUSD(item.usd)}</td>
+            <td class="price-khr">${formatKHR(item.khr)}</td>
+          </tr>
+        `;
+      });
+      oilTableBody.innerHTML = oilHtml;
+    }
+
+    // PDF Download Function
+    btnDownloadPDF.addEventListener('click', () => {
+      const element = document.getElementById('reportContent');
+      const opt = {
+        margin:       10,
+        filename:     'Market_Report_Gold_Oil.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0d1117' },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      btnDownloadPDF.innerText = 'កំពុងទាញយក...';
+      btnDownloadPDF.disabled = true;
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        btnDownloadPDF.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          ទាញយក PDF
+        `;
+        btnDownloadPDF.disabled = false;
+      }).catch(err => {
+        console.error(err);
+        btnDownloadPDF.innerText = 'ទាញយក PDF';
+        btnDownloadPDF.disabled = false;
+      });
+    });
+
+    // Event Listeners for real-time calculation
+    goldInput.addEventListener('input', calculateMarket);
+    oilInput.addEventListener('input', calculateMarket);
+    khrRateInput.addEventListener('input', calculateMarket);
+
+    // Initial calculation on load
+    calculateMarket();
+  </script>
+</body>
+</html>
